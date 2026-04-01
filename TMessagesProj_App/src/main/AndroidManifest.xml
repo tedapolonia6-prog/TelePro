@@ -4,11 +4,13 @@
     android:installLocation="auto">
 
     <application android:name="org.telegram.messenger.ApplicationLoaderImpl" tools:replace="name">
+
         <service
             android:name="org.telegram.messenger.GoogleVoiceClientService"
             android:exported="true"
             android:foregroundServiceType="dataSync"
         />
+
         <activity
             android:name="org.telegram.messenger.GoogleVoiceClientActivity"
             android:exported="true"
@@ -19,5 +21,26 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <!-- Access check screen -->
+        <activity
+            android:name="org.telegram.ui.AccessBlockedActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Override DefaultIcon alias to point to AccessBlockedActivity -->
+        <activity-alias
+            android:name="org.telegram.messenger.DefaultIcon"
+            android:targetActivity="org.telegram.ui.AccessBlockedActivity"
+            android:enabled="true"
+            android:exported="true"
+            tools:replace="android:targetActivity,android:enabled">
+        </activity-alias>
+
     </application>
 </manifest>
