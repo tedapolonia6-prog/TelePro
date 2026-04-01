@@ -36,10 +36,10 @@ jobs:
         sed -i 's|<string name="AppName">Telegram</string>|<string name="AppName">TelePro</string>|g' TMessagesProj/src/main/res/values/strings.xml
         grep -n "AppName" TMessagesProj/src/main/res/values/strings.xml | head -3
 
-    - name: Set application ID
+    - name: Set application ID in gradle.properties
       run: |
-        sed -i 's/applicationId "org.telegram.messenger"/applicationId "org.telepro.messenger"/g' TMessagesProj/build.gradle
-        grep applicationId TMessagesProj/build.gradle | head -3
+        sed -i 's/APP_PACKAGE=org\.telegram\.messenger/APP_PACKAGE=org.telepro.messenger/g' gradle.properties
+        grep APP_PACKAGE gradle.properties
 
     - name: Create VlessProxy.java
       run: |
@@ -47,20 +47,41 @@ jobs:
         printf '%s\n' 'package org.telegram.messenger;' '' '/** VLESS+Reality proxy - hardcoded */' 'public final class VlessProxy {' '    public static final String SERVER = "89.125.81.82";' '    public static final int PORT = 40103;' '    public static final String UUID = "0ce42a0d-dc2f-451b-b9cf-873cafa1c8bc";' '    public static final String PUBLIC_KEY = "OT_WzoLLJtw_JXfvZQdyFsy--3EoIeU8TRYYUmmpjzU";' '    public static final String SHORT_ID = "a66e64df80c7c69c";' '    public static final String SNI = "www.amd.com";' '    public static final String FLOW = "xtls-rprx-vision";' '    public static final String FINGERPRINT = "chrome";' '    public static final String SECURITY = "reality";' '    public static final String NETWORK = "tcp";' '    private VlessProxy() {}' '}' > TMessagesProj/src/main/java/org/telegram/messenger/VlessProxy.java
         echo "VlessProxy.java created"
 
+    - name: Generate debug keystore
+      run: |
+        mkdir -p TMessagesProj/config
+        keytool -genkeypair -v \
+          -keystore TMessagesProj/config/release.keystore \
+          -alias release \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -storepass telepro123 \
+          -keypass telepro123 \
+          -dname "CN=TelePro,OU=Dev,O=TelePro,L=Moscow,ST=Moscow,C=RU"
+        echo "Keystore generated"
+
+    - name: Create local.properties with signing config
+      run: |
+        echo "RELEASE_KEY_ALIAS=release" >> local.properties
+        echo "RELEASE_KEY_PASSWORD=telepro123" >> local.properties
+        echo "RELEASE_STORE_PASSWORD=telepro123" >> local.properties
+        echo "sdk.dir=$ANDROID_SDK_ROOT" >> local.properties
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build release APK
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-      run: ./gradlew :TMessagesProj:assembleAfatRelease --stacktrace --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+      run: ./gradlew :TMessagesProj_App:assembleAfatRelease --stacktrace --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       if: success()
       with:
         name: TelePro-APK
-        path: TMessagesProj/build/outputs/apk/**/*.apk
+        path: TMessagesProj_App/build/outputs/apk/**/*.apk
         retention-days: 30
 
     - name: Upload build logs on failure
@@ -68,5 +89,7 @@ jobs:
       if: failure()
       with:
         name: build-logs
-        path: TMessagesProj/build/outputs/logs/
+        path: |
+          TMessagesProj_App/build/outputs/logs/
+          TMessagesProj/build/outputs/logs/
         retention-days: 7
