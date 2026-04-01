@@ -41,6 +41,11 @@ jobs:
         sed -i 's/APP_PACKAGE=org\.telegram\.messenger/APP_PACKAGE=org.telepro.messenger/g' gradle.properties
         grep APP_PACKAGE gradle.properties
 
+    - name: Patch google-services.json for org.telepro.messenger
+      run: |
+        sed -i 's/"package_name": "org.telegram.messenger"/"package_name": "org.telepro.messenger"/g' TMessagesProj_App/google-services.json
+        grep package_name TMessagesProj_App/google-services.json
+
     - name: Create VlessProxy.java
       run: |
         mkdir -p TMessagesProj/src/main/java/org/telegram/messenger/
