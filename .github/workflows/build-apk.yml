@@ -47,8 +47,9 @@ jobs:
         printf '%s\n' 'package org.telegram.messenger;' '' '/** VLESS+Reality proxy - hardcoded */' 'public final class VlessProxy {' '    public static final String SERVER = "89.125.81.82";' '    public static final int PORT = 40103;' '    public static final String UUID = "0ce42a0d-dc2f-451b-b9cf-873cafa1c8bc";' '    public static final String PUBLIC_KEY = "OT_WzoLLJtw_JXfvZQdyFsy--3EoIeU8TRYYUmmpjzU";' '    public static final String SHORT_ID = "a66e64df80c7c69c";' '    public static final String SNI = "www.amd.com";' '    public static final String FLOW = "xtls-rprx-vision";' '    public static final String FINGERPRINT = "chrome";' '    public static final String SECURITY = "reality";' '    public static final String NETWORK = "tcp";' '    private VlessProxy() {}' '}' > TMessagesProj/src/main/java/org/telegram/messenger/VlessProxy.java
         echo "VlessProxy.java created"
 
-    - name: Generate debug keystore
+    - name: Generate keystore
       run: |
+        rm -f TMessagesProj/config/release.keystore
         mkdir -p TMessagesProj/config
         keytool -genkeypair -v \
           -keystore TMessagesProj/config/release.keystore \
@@ -61,7 +62,7 @@ jobs:
           -dname "CN=TelePro,OU=Dev,O=TelePro,L=Moscow,ST=Moscow,C=RU"
         echo "Keystore generated"
 
-    - name: Create local.properties with signing config
+    - name: Create local.properties
       run: |
         echo "RELEASE_KEY_ALIAS=release" >> local.properties
         echo "RELEASE_KEY_PASSWORD=telepro123" >> local.properties
