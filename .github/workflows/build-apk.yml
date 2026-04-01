@@ -13,6 +13,26 @@ jobs:
     timeout-minutes: 120
 
     steps:
+    - name: Free disk space
+      run: |
+        echo "Disk before cleanup:"
+        df -h
+        # Remove unused tools to free space
+        sudo rm -rf /usr/local/lib/android/sdk/emulator
+        sudo rm -rf /usr/local/lib/android/sdk/system-images
+        sudo rm -rf /usr/local/lib/android/sdk/platforms/android-30
+        sudo rm -rf /usr/local/lib/android/sdk/platforms/android-31
+        sudo rm -rf /usr/local/lib/android/sdk/platforms/android-32
+        sudo rm -rf /usr/local/lib/android/sdk/platforms/android-33
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo rm -rf /opt/hostedtoolcache/Ruby
+        sudo rm -rf /opt/hostedtoolcache/go
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/share/boost
+        sudo apt-get clean
+        echo "Disk after cleanup:"
+        df -h
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
@@ -33,7 +53,8 @@ jobs:
 
     - name: Patch app name to TelePro
       run: |
-        sed -i 's|<string name="AppName">Telegram</string>|<string name="AppName">TelePro</string>|g' TMessagesProj/src/main/res/values/strings.xml
+        sed -i 's|<string name="AppName">Telegram</string>|<string name="AppName">TelePro</string>|g' \
+          TMessagesProj/src/main/res/values/strings.xml
         grep -n "AppName" TMessagesProj/src/main/res/values/strings.xml | head -3
 
     - name: Patch gradle.properties (package, keystore params)
@@ -46,6 +67,13 @@ jobs:
       run: |
         sed -i 's/"package_name": "org.telegram.messenger"/"package_name": "org.telepro.messenger"/g' TMessagesProj_App/google-services.json
         grep package_name TMessagesProj_App/google-services.json
+
+    - name: Limit ABI to arm64-v8a and armeabi-v7a only
+      run: |
+        # Replace x86/x86_64 from afat flavor abiFilters to reduce build size
+        sed -i 's/abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"/abiFilters "armeabi-v7a", "arm64-v8a"/g' \
+          TMessagesProj_App/build.gradle
+        grep -A3 "afat {" TMessagesProj_App/build.gradle | head -10
 
     - name: Create VlessProxy.java
       run: |
