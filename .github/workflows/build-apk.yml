@@ -75,6 +75,35 @@ jobs:
           TMessagesProj_App/build.gradle
         grep -A3 "afat {" TMessagesProj_App/build.gradle | head -10
 
+    - name: Install TelePro icons from CDN
+      run: |
+        pip install Pillow --quiet
+        python3 << 'PYEOF'
+import urllib.request
+from PIL import Image
+import io, os
+
+url = "https://7056471699826433.adaptive.ai/cdn/telepro-icon.png"
+resp = urllib.request.urlopen(url)
+img = Image.open(io.BytesIO(resp.read())).convert("RGBA")
+
+sizes = {
+  "mdpi": (48, "TMessagesProj/src/main/res/mipmap-mdpi"),
+  "hdpi": (72, "TMessagesProj/src/main/res/mipmap-hdpi"),
+  "xhdpi": (96, "TMessagesProj/src/main/res/mipmap-xhdpi"),
+  "xxhdpi": (144, "TMessagesProj/src/main/res/mipmap-xxhdpi"),
+  "xxxhdpi": (192, "TMessagesProj/src/main/res/mipmap-xxxhdpi"),
+}
+
+for density, (size, path) in sizes.items():
+    os.makedirs(path, exist_ok=True)
+    resized = img.resize((size, size), Image.LANCZOS)
+    resized.save(f"{path}/ic_launcher.png", "PNG")
+    # Also create round version
+    resized.save(f"{path}/ic_launcher_round.png", "PNG")
+    print(f"{density}: {size}x{size} saved to {path}")
+PYEOF
+
     - name: Create VlessProxy.java
       run: |
         mkdir -p TMessagesProj/src/main/java/org/telegram/messenger/
