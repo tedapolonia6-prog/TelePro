@@ -5,7 +5,7 @@ on:
   push:
     branches: [ master ]
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 jobs:
   build:
@@ -52,36 +52,38 @@ jobs:
 
     - name: Patch app name to TelePro
       run: |
-        sed -i 's|<string name="AppName">Telegram</string>|<string name="AppName">TelePro</string>|g' TMessagesProj/src/main/res/values/strings.xml
+        sed -i "s|<string name="AppName">Telegram</string>|<string name="AppName">TelePro</string>|g" TMessagesProj/src/main/res/values/strings.xml
         grep -n "AppName" TMessagesProj/src/main/res/values/strings.xml | head -3
 
     - name: Patch gradle.properties (package, keystore params)
       run: |
-        sed -i 's/APP_PACKAGE=org\.telegram\.messenger/APP_PACKAGE=org.telepro.messenger/' gradle.properties
+        sed -i "s/APP_PACKAGE=org\.telegram\.messenger/APP_PACKAGE=org.telepro.messenger/" gradle.properties
         grep APP_PACKAGE gradle.properties
         grep RELEASE_ gradle.properties
 
     - name: Patch google-services.json for org.telepro.messenger
       run: |
-        sed -i 's/"package_name": "org.telegram.messenger"/"package_name": "org.telepro.messenger"/g' TMessagesProj_App/google-services.json
+        sed -i "s/"package_name": "org.telegram.messenger"/"package_name": "org.telepro.messenger"/g" TMessagesProj_App/google-services.json
         grep package_name TMessagesProj_App/google-services.json
 
     - name: Limit ABI to arm64-v8a and armeabi-v7a only
       run: |
-        sed -i 's/abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"/abiFilters "armeabi-v7a", "arm64-v8a"/g' TMessagesProj_App/build.gradle
+        sed -i "s/abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"/abiFilters "armeabi-v7a", "arm64-v8a"/g" TMessagesProj_App/build.gradle
         grep -A3 "afat {" TMessagesProj_App/build.gradle | head -10
 
     - name: Install TelePro icons from CDN
       run: |
         pip install Pillow --quiet
-        echo "aW1wb3J0IHVybGxpYi5yZXF1ZXN0CmZyb20gUElMIGltcG9ydCBJbWFnZQppbXBvcnQgaW8sIG9zCgp1cmwgPSAnaHR0cHM6Ly83MDU2NDcxNjk5ODI2NDMzLmFkYXB0aXZlLmFpL2Nkbi90ZWxlcHJvLWljb24ucG5nJwpyZXNwID0gdXJsbGliLnJlcXVlc3QudXJsb3Blbih1cmwpCmltZyA9IEltYWdlLm9wZW4oaW8uQnl0ZXNJTyhyZXNwLnJlYWQoKSkpLmNvbnZlcnQoJ1JHQkEnKQoKc2l6ZXMgPSBbCiAgKCdtZHBpJywgNDgsICdUTWVzc2FnZXNQcm9qL3NyYy9tYWluL3Jlcy9taXBtYXAtbWRwaScpLAogICgnaGRwaScsIDcyLCAnVE1lc3NhZ2VzUHJvai9zcmMvbWFpbi9yZXMvbWlwbWFwLWhkcGknKSwKICAoJ3hoZHBpJywgOTYsICdUTWVzc2FnZXNQcm9qL3NyYy9tYWluL3Jlcy9taXBtYXAteGhkcGknKSwKICAoJ3h4aGRwaScsIDE0NCwgJ1RNZXNzYWdlc1Byb2ovc3JjL21haW4vcmVzL21pcG1hcC14eGhkcGknKSwKICAoJ3h4eGhkcGknLCAxOTIsICdUTWVzc2FnZXNQcm9qL3NyYy9tYWluL3Jlcy9taXBtYXAteHh4aGRwaScpLApdCgpmb3IgZGVuc2l0eSwgc2l6ZSwgcGF0aCBpbiBzaXplczoKICAgIG9zLm1ha2VkaXJzKHBhdGgsIGV4aXN0X29rPVRydWUpCiAgICByZXNpemVkID0gaW1nLnJlc2l6ZSgoc2l6ZSwgc2l6ZSksIEltYWdlLkxBTkNaT1MpCiAgICByZXNpemVkLnNhdmUocGF0aCArICcvaWNfbGF1bmNoZXIucG5nJywgJ1BORycpCiAgICByZXNpemVkLnNhdmUocGF0aCArICcvaWNfbGF1bmNoZXJfcm91bmQucG5nJywgJ1BORycpCiAgICBwcmludChkZW5zaXR5ICsgJzogJyArIHN0cihzaXplKSArICd4JyArIHN0cihzaXplKSArICcgc2F2ZWQnKQo=" | base64 -d > /tmp/install_icons.py
-        python3 /tmp/install_icons.py
+        python3 scripts/install_icons.py
 
     - name: Create VlessProxy.java
       run: |
         mkdir -p TMessagesProj/src/main/java/org/telegram/messenger/
-        printf '%s\n' 'package org.telegram.messenger;' '' '/** VLESS+Reality proxy - hardcoded */' 'public final class VlessProxy {' '    public static final String SERVER = "89.125.81.82";' '    public static final int PORT = 40103;' '    public static final String UUID = "0ce42a0d-dc2f-451b-b9cf-873cafa1c8bc";' '    public static final String PUBLIC_KEY = "OT_WzoLLJtw_JXfvZQdyFsy--3EoIeU8TRYYUmmpjzU";' '    public static final String SHORT_ID = "a66e64df80c7c69c";' '    public static final String SNI = "www.amd.com";' '    public static final String FLOW = "xtls-rprx-vision";' '    public static final String FINGERPRINT = "chrome";' '    public static final String SECURITY = "reality";' '    public static final String NETWORK = "tcp";' '    private VlessProxy() {}' '}' > TMessagesProj/src/main/java/org/telegram/messenger/VlessProxy.java
+        printf "%s\n" "package org.telegram.messenger;" "" "/** VLESS+Reality proxy - hardcoded */" "public final class VlessProxy {" "    public static final String SERVER = \"89.125.81.82\";" "    public static final int PORT = 40103;" "    public static final String UUID = \"0ce42a0d-dc2f-451b-b9cf-873cafa1c8bc\";" "    public static final String PUBLIC_KEY = \"OT_WzoLLJtw_JXfvZQdyFsy--3EoIeU8TRYYUmmpjzU\";" "    public static final String SHORT_ID = \"a66e64df80c7c69c\";" "    public static final String SNI = \"www.amd.com\";" "    public static final String FLOW = \"xtls-rprx-vision\";" "    public static final String FINGERPRINT = \"chrome\";" "    public static final String SECURITY = \"reality\";" "    public static final String NETWORK = \"tcp\";" "    private VlessProxy() {}" "}" > TMessagesProj/src/main/java/org/telegram/messenger/VlessProxy.java
         echo "VlessProxy.java created"
+
+    - name: Patch ApplicationLoader.java to enable VLESS proxy on start
+      run: python3 scripts/patch_proxy.py
 
     - name: Regenerate keystore with alias androidkey
       run: |
